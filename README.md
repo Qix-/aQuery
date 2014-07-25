@@ -29,4 +29,7 @@ an array.
 
 When generating a new aQuery object (third form), an optional **enumeration
 function** can be specified. This function is passed the parameter from the
-first form _when the parameter is specified and isn't a function_.
+first form _when the parameter is specified and isn't a function_. If no
+enumeration function is specified, un-checked arrays become the only valid
+parameter type and are passed directly to new result objects. Enumerators
+must return an array.
