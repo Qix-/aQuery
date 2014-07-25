@@ -15,6 +15,7 @@ A = aQuery = (function () {
 
   // Create query result class
   , aQueryResult = function(arr) {
+    // Sanity check
     if (arr === undefined
         || arr === null
         || !(Array.isArray(arr) || arr instanceof NodeList)) {
@@ -22,6 +23,9 @@ A = aQuery = (function () {
     } else {
       this.collection = arr;
     }
+
+    // Store length
+    this.length = this.collection.length;
   }
 
   // Mirror HTMLElement prototype
@@ -80,6 +84,12 @@ A = aQuery = (function () {
       // Assign value
       obj[segments[seglen]] = value;
     }
+  };
+
+  // Add at() prototype
+  aproto.at = function(num) {
+    num = parseInt(num);
+    return this.collection[num];
   };
 
   // Create aQuery function
