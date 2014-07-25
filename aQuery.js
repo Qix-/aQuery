@@ -5,22 +5,27 @@
  *  the popular jQuery, without the added bloat. An aQuery object
  *  simply harnesses query selectors, a simple wrapper object,
  *  and a hi-jacked default DOM prototype to make its magic happen.
+ *
+ *  PERFS:
+ *  http://jsperf.com/instanceof-vs-array-isarray
+ *  http://jsperf.com/fn-vs-sub
  */
 var A, aQuery, aQueryInit;
 
-A = aQuery = (aQueryInit = function (base) {
+A = aQuery = (aQueryInit = function (base, enumerator) {
   'use strict';
 
   // Store slice
   var slice = [].slice
+  , hasEnumerator = arguments.length >= 2
 
   // Create query result class
   , aQueryResult = function(arr) {
     // Sanity check
-    if (arr === undefined
-        || arr === null
-        || !(Array.isArray(arr) || arr instanceof NodeList)) {
+    if (arr.length === undefined) {
       this.collection = [];
+      console.warn('value passed to new result isn\' a collection '
+        + 'for ' + (base.name || '[anonymous base type]'));
     } else {
       this.collection = arr;
     }
@@ -54,7 +59,7 @@ A = aQuery = (aQueryInit = function (base) {
         var args = slice.call(arguments);
 
         // Static invocation?
-        if (this.constructor !== aQueryResult) {
+        if (this.constructor.name !== aQueryResult.name) {
           return fn.apply(this, args);
         }
 
@@ -129,10 +134,25 @@ A = aQuery = (aQueryInit = function (base) {
     var collection;
 
     // Sanity check
-    if (typeof query !== 'string' || query.trim() === '') {
-      collection = [];
+    if (!hasEnumerator) {
+      collection = query;
+
+      // Sanity check
+      if (collection.length === undefined) {
+        collection = [];
+        console.warn('enumerator not specified; only array queries can be made '
+          + 'for ' + (base.home || '[anonymous base type]'));
+      }
     } else {
-      collection = document.querySelectorAll(query);
+      // Call with aQuery as context
+      collection = enumerator.call(this, query);
+
+      // Sanity check
+      if (collection.length === undefined) {
+        collection = [];
+        console.warn('enumerator result not an array for '
+          + (base.name || '[anonymous base type]'));
+      }
     }
 
     // Return new query result
@@ -140,4 +160,4 @@ A = aQuery = (aQueryInit = function (base) {
   }
 
   return aQuery;
-})(HTMLElement);
+})(HTMLElement, document.querySelectorAll.bind(document));
