@@ -39,12 +39,12 @@ A = aQuery = (aQueryInit = function (base) {
       proto !== undefined;
       proto = (obj = Object.getPrototypeOf(obj)).prototype) {
     // Iterate prototype elements
-    Object.keys(proto).forEach(function(key) {
+    Object.getOwnPropertyNames(proto).forEach(function(key) {
       // Scope-ify the function itself
       var fn = proto[key];
 
       // Is it an actual prototype function?
-      if (!proto.hasOwnProperty(key) || typeof fn !== 'function') {
+      if (typeof fn !== 'function') {
         return;
       }
 
