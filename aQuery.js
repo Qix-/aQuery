@@ -7,14 +7,16 @@
  *  simply harnesses query selectors, a simple wrapper object,
  *  and a hi-jacked default DOM prototype to make its magic happen.
  */
-
-var aQuery = (function() {
+var aQuery, A;
+A = aQuery = (function() {
   // Store slice
   var _slice = [].slice
 
   // Create query result class
   , aQueryResult = function(arr) {
-    if (arr == undefined || arr == null || !Array.isArray(arr)) {
+    if (arr == undefined
+        || arr == null
+        || !(Array.isArray(arr) || arr instanceof NodeList)) {
       this.collection = [];
     } else {
       this.collection = arr;
@@ -23,10 +25,11 @@ var aQuery = (function() {
 
   // Mirror HTMLElement prototype
   , aproto = aQueryResult.prototype
-  , obj = HTMLElement;
+  , obj = HTMLElement
+  , proto = obj.prototype;
 
   // Traverse prototype hierarchy
-  for (var proto = obj.prototype;
+  for (;
       proto !== undefined;
       proto = (obj = Object.getPrototypeOf(obj)).prototype) {
     // Iterate prototype elements
@@ -42,15 +45,56 @@ var aQuery = (function() {
       // Wrap with array-version of method
       aproto[key] = function() {
         // Make args an actual array and prepare a results array
-        var args = _slice.call(arguments);
-        var results = [];
+        var args = _slice.call(arguments)
+        , results = [];
 
         // Iterate collection of elements
         for (var i = 0, len = this.collection.length; i < len; i++) {
           results.push(fn.apply(this.collection[i], args));
         };
+
         return results;
       };
     });
   }
+
+  // Add attr() prototype
+  aproto.attr = function(dotPath, value) {
+    // Iterate collection
+    for(var i = 0, len = this.collection.length; i < len; i++) {
+      // Get object
+      var item = this.collection[i]
+
+      // Resolve dotpath
+      , obj = item
+      , segments = dotPath.split('.')
+      , seglen = segments.length - 1;
+      for(var j = 0;
+          j < seglen;
+          obj = obj[segments[j++]]) {
+        var jj = j + 1;
+        obj[segments[jj]] = obj[segments[jj]] || {};
+      }
+
+      // Assign value
+      obj[segments[seglen]] = value;
+    }
+  };
+
+  // Create aQuery function
+  var aQuery = function(query) {
+    var collection;
+
+    // Sanity check
+    if (typeof query !== 'string' || query.trim() === '') {
+      collection = [];
+    } else {
+      collection = document.querySelectorAll(query);
+    }
+
+    // Return new query result
+    return new aQueryResult(collection);
+  }
+
+  return aQuery;
 })();
