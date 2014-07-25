@@ -58,7 +58,9 @@ A = aQuery = (function () {
           results.push(fn.apply(this.collection[i], args));
         };
 
-        return results;
+        // Store results and return
+        this.$ = results;
+        return this;
       };
     });
   }
@@ -94,10 +96,12 @@ A = aQuery = (function () {
       }
     }
 
-    return results;
+    this.$ = results;
+    return this;
   };
 
   // Add at() prototype
+  //  This method is not meant for daisy chaining.
   aproto.at = function(num) {
     num = parseInt(num);
     return this.collection[num];
