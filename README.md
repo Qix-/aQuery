@@ -8,10 +8,11 @@ their results if necessary or daisy-chaining calls to quickly build them up.
 
 Unlike jQuery, **aQuery can be applied to any type** (but defaults to
 HTMLElement). aQuery also provides access to the underlying prototype, allowing
-one to build up the API used on collections of objects.
+one to build up the API used on collections of objects, or create a completely
+new API for custom types.
 
 ## Usage
-`aQuery` (or just `A`) is a function lives in the global namespace. Upon
+`aQuery` (or just `A`) is a function that lives in the global namespace. Upon
 invocation, it provides one of three things:
 
 - `A(string/mixed)` -         Performs a query on the document and returns a
@@ -34,6 +35,9 @@ enumeration function is specified, un-checked arrays become the only valid
 parameter type and are passed directly to new result objects. Enumerators
 must return an array.
 
+> 'Array', as used in the previous paragraph, simply means an object
+> with a `.length` attribute.
+
 ### Default aQuery object
 As noted before, the default `aQuery` (or `A`) object is fitted around
 [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement),
@@ -45,7 +49,7 @@ array, `NodeList`s and other non-array arrays (such as `arguments`) are all
 supported by default.
 
 ### Results and daisy chaining
-aQuery API functions can return whatever they'd like; however, the custom
+aQuery API functions can return whatever they'd like; however, the convention
 is to return `this` in order to allow for daisy chaining (the only built-in
 exception being `.at()`).
 
@@ -54,18 +58,18 @@ Because of this, results are stored as an array in `.$`.
 ## Examples
 Below are just a few examples of various aQuery operations:
 
-### Make all `<strong>` tags have a black background and white text
+#### Make all `<strong>` tags have a black background and white text
 ~~~javascript
 A('strong').prop('style.color', '#FFF')
            .prop('style.background', '#000');
 ~~~
 
 > This simply selects all `<strong>` tags on the page, uses the aQuery
-> built-in API call `.prop()` enumerate a dot path and assign the given
+> built-in API call `.prop()` to enumerate a dot path and assign the given
 > value to it. A dot path is simply the string-form object notation you'd
 > normally use to access an object.
 
-### Remove all tags with the class `.hidden`
+#### Remove all tags with the class `.hidden`
 ~~~javascript
 A('.hidden').remove();
 ~~~
@@ -73,7 +77,7 @@ A('.hidden').remove();
 > Since `remove()` is part of the `HTMLElement` spec, it is thus bound
 > and available to us to call.
 
-### Click every `<button>`
+#### Click every `<button>`
 ~~~javascript
 var e = document.createEvent('MouseEvents');
 e.initMouseEvent("click", true, true, window, 1, 0, 0, 0, 0,
@@ -87,7 +91,7 @@ A('button').dispatchEvent(e);
 > is created, and then we call upon aQuery to find every button and dispatch
 > it.
 
-### Test a string against multiple regexes
+#### Test a string against multiple regexes
 ~~~javascript
 var Regs = A(RegExp);
 var results = Regs([/./, /.+/, /[a-z]+/i]).test('hello').$;
@@ -97,7 +101,7 @@ var results = Regs([/./, /.+/, /[a-z]+/i]).test('hello').$;
 > an array of various regex pattern objects. With that collection, we
 > test the string `'hello'` against all of them and store the results.
 
-### Create a completely new API
+#### Create a completely new API
 ~~~javascript
 // Create a simple storage class
 function MyClass() {
@@ -125,15 +129,15 @@ StrQuery().cat = function(suffix) {
   return this;
 };
 
-// Call!
+// Setup and call!
 var strs = [
   new MyClass(),
   new MyClass(),
   new MyClass()
 ];
 strs = StrQuery(strs).set('foo') // Set all to 'foo'
-                             .cat('bar') // Concat 'bar'
-                             .$;         // Get results
+                     .cat('bar') // Concat 'bar'
+                     .$;         // Get results
 ~~~
 
 `strs` is now equal to `['foobar', 'foobar', 'foobar']`.
