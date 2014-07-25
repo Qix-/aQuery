@@ -14,17 +14,24 @@ var aQuery = (function() {
 
   // Create query result class
   , aQueryResult = function(arr) {
-    this.collection = arr;
+    if (arr == undefined || arr == null || !Array.isArray(arr)) {
+      this.collection = [];
+    } else {
+      this.collection = arr;
+    }
   }
 
   // Mirror HTMLElement prototype
   , aproto = aQueryResult.prototype
   , obj = HTMLElement;
-  for(var proto = obj.prototype;
+
+  // Traverse prototype hierarchy
+  for (var proto = obj.prototype;
       proto !== undefined;
       proto = (obj = Object.getPrototypeOf(obj)).prototype) {
+    // Iterate prototype elements
     Object.keys(proto).forEach(function(key) {
-      // Scope'd
+      // Scope-ify the function itself
       var fn = proto[key];
 
       // Is it an actual prototype function?
@@ -32,11 +39,14 @@ var aQuery = (function() {
         return;
       }
 
-      // Wrap
+      // Wrap with array-version of method
       aproto[key] = function() {
+        // Make args an actual array and prepare a results array
         var args = _slice.call(arguments);
         var results = [];
-        for(var i = 0, len = this.collection.length; i < len; i++) {
+
+        // Iterate collection of elements
+        for (var i = 0, len = this.collection.length; i < len; i++) {
           results.push(fn.apply(this.collection[i], args));
         };
         return results;
