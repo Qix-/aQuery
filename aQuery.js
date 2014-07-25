@@ -63,8 +63,8 @@ A = aQuery = (function () {
     });
   }
 
-  // Add attr() prototype
-  aproto.attr = function(dotPath, value) {
+  // Add prop() prototype
+  aproto.prop = function(dotPath, value) {
     // Iterate collection
     for(var i = 0, len = this.collection.length; i < len; i++) {
       // Get object
