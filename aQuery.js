@@ -1,4 +1,3 @@
-'use strict';
 /**
  * aQuery - A simpler query system.
  *
@@ -8,14 +7,16 @@
  *  and a hi-jacked default DOM prototype to make its magic happen.
  */
 var aQuery, A;
-A = aQuery = (function() {
+A = aQuery = (function () {
+  'use strict';
+
   // Store slice
-  var _slice = [].slice
+  var slice = [].slice
 
   // Create query result class
   , aQueryResult = function(arr) {
-    if (arr == undefined
-        || arr == null
+    if (arr === undefined
+        || arr === null
         || !(Array.isArray(arr) || arr instanceof NodeList)) {
       this.collection = [];
     } else {
@@ -45,7 +46,7 @@ A = aQuery = (function() {
       // Wrap with array-version of method
       aproto[key] = function() {
         // Make args an actual array and prepare a results array
-        var args = _slice.call(arguments)
+        var args = slice.call(arguments)
         , results = [];
 
         // Iterate collection of elements
