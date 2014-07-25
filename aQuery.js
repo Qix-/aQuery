@@ -6,8 +6,9 @@
  *  simply harnesses query selectors, a simple wrapper object,
  *  and a hi-jacked default DOM prototype to make its magic happen.
  */
-var aQuery, A;
-A = aQuery = (function () {
+var A, aQuery, aQueryInit;
+
+A = aQuery = (aQueryInit = function (base) {
   'use strict';
 
   // Store slice
@@ -28,9 +29,9 @@ A = aQuery = (function () {
     this.length = this.collection.length;
   }
 
-  // Mirror HTMLElement prototype
+  // Mirror base type prototype
   , aproto = aQueryResult.prototype
-  , obj = HTMLElement
+  , obj = base
   , proto = obj.prototype;
 
   // Traverse prototype hierarchy
@@ -114,6 +115,11 @@ A = aQuery = (function () {
       return aQueryResult.prototype;
     }
 
+    // Re-base aQuery?
+    if (typeof query === 'function') {
+      return aQueryInit(query);
+    }
+
     var collection;
 
     // Sanity check
@@ -128,4 +134,4 @@ A = aQuery = (function () {
   }
 
   return aQuery;
-})();
+})(HTMLElement);
