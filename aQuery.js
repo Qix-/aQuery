@@ -65,6 +65,9 @@ A = aQuery = (function () {
 
   // Add prop() prototype
   aproto.prop = function(dotPath, value) {
+    // Setup results
+    var results = [];
+
     // Iterate collection
     for(var i = 0, len = this.collection.length; i < len; i++) {
       // Get object
@@ -81,9 +84,17 @@ A = aQuery = (function () {
         obj[segments[jj]] = obj[segments[jj]] || {};
       }
 
-      // Assign value
-      obj[segments[seglen]] = value;
+      // Retrieving?
+      if (!value) {
+        // Retrieve
+        results.push(obj[segments[seglen]]);
+      } else {
+        // Assign value
+        results.push(obj[segments[seglen]] = value);
+      }
     }
+
+    return results;
   };
 
   // Add at() prototype
