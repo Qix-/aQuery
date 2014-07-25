@@ -51,8 +51,14 @@ A = aQuery = (aQueryInit = function (base) {
       // Wrap with array-version of method
       aproto[key] = function() {
         // Make args an actual array and prepare a results array
-        var args = slice.call(arguments)
-        , results = [];
+        var args = slice.call(arguments);
+
+        // Static invocation?
+        if (this.constructor !== aQueryResult) {
+          return fn.apply(this, args);
+        }
+
+        var results = [];
 
         // Iterate collection of elements
         for (var i = 0, len = this.collection.length; i < len; i++) {
