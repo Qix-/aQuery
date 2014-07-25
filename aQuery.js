@@ -105,6 +105,11 @@ A = aQuery = (function () {
 
   // Create aQuery function
   var aQuery = function(query) {
+    // Get the prototype?
+    if (arguments.length === 0) {
+      return aQueryResult.prototype;
+    }
+
     var collection;
 
     // Sanity check
