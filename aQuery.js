@@ -12,152 +12,182 @@
  */
 var A, aQuery, aQueryInit;
 
-A = aQuery = (aQueryInit = function (base, enumerator) {
-  'use strict';
+A = aQuery = (function() { 
+  var A = (aQueryInit = function (base, enumerator) {
+    'use strict';
 
-  // Store slice
-  var slice = [].slice
-  , hasEnumerator = arguments.length >= 2
+    // Store slice
+    var slice = [].slice
+    , hasEnumerator = arguments.length >= 2
 
-  // Create query result class
-  , aQueryResult = function(arr) {
-    // Sanity check
-    if (arr.length === undefined) {
-      this.collection = [];
-      console.warn('value passed to new result isn\' a collection '
-        + 'for ' + (base.name || '[anonymous base type]'));
-    } else {
-      this.collection = arr;
-    }
-
-    // Store length
-    this.length = this.collection.length;
-  }
-
-  // Mirror base type prototype
-  , aproto = aQueryResult.prototype
-  , obj = base
-  , proto = obj.prototype;
-
-  // Traverse prototype hierarchy
-  for (;
-      proto !== undefined;
-      proto = (obj = Object.getPrototypeOf(obj)).prototype) {
-    // Iterate prototype elements
-    Object.getOwnPropertyNames(proto).forEach(function(key) {
-      // Scope-ify the function itself
-      var fn = proto[key];
-
-      // Is it an actual prototype function?
-      if (typeof fn !== 'function') {
-        return;
+    // Create query result class
+    , aQueryResult = function(arr) {
+      // Sanity check
+      if (arr.length === undefined) {
+        this.collection = [];
+        console.warn('value passed to new result isn\' a collection '
+          + 'for ' + (base.name || '[anonymous base type]'));
+      } else if (arr instanceof aQueryResult) {
+        this.collection = arr.collection;
+      } else {
+        this.collection = arr;
       }
 
-      // Wrap with array-version of method
-      aproto[key] = function() {
-        // Make args an actual array and prepare a results array
-        var args = slice.call(arguments);
+      // Store length
+      this.length = this.collection.length;
+    }
 
-        // Static invocation?
-        if (this.constructor.name !== aQueryResult.name) {
-          return fn.apply(this, args);
+    // Mirror base type prototype
+    , aproto = aQueryResult.prototype
+    , obj = base
+    , proto = obj.prototype;
+
+    // Traverse prototype hierarchy
+    for (;
+        proto !== undefined;
+        proto = (obj = Object.getPrototypeOf(obj)).prototype) {
+      // Iterate prototype elements
+      Object.getOwnPropertyNames(proto).forEach(function(key) {
+        // Scope-ify the function itself
+        var fn = proto[key];
+
+        // Is it an actual prototype function?
+        if (typeof fn !== 'function') {
+          return;
         }
 
-        var results = [];
+        // Wrap with array-version of method
+        aproto[key] = function() {
+          // Make args an actual array and prepare a results array
+          var args = slice.call(arguments);
 
-        // Iterate collection of elements
-        for (var i = 0, len = this.collection.length; i < len; i++) {
-          results.push(fn.apply(this.collection[i], args));
+          // Static invocation?
+          if (this.constructor.name !== aQueryResult.name) {
+            return fn.apply(this, args);
+          }
+
+          var results = [];
+
+          // Iterate collection of elements
+          for (var i = 0, len = this.collection.length; i < len; i++) {
+            results.push(fn.apply(this.collection[i], args));
+          };
+
+          // Store results and return
+          this.$ = results;
+          return this;
         };
+      });
+    }
 
-        // Store results and return
-        this.$ = results;
-        return this;
-      };
-    });
-  }
+    // Add prop() prototype
+    aproto.prop = function(dotPath, value) {
+      // Setup results
+      var results = [];
 
-  // Add prop() prototype
-  aproto.prop = function(dotPath, value) {
-    // Setup results
-    var results = [];
+      // Iterate collection
+      for(var i = 0, len = this.collection.length; i < len; i++) {
+        // Get object
+        var item = this.collection[i];
 
-    // Iterate collection
-    for(var i = 0, len = this.collection.length; i < len; i++) {
-      // Get object
-      var item = this.collection[i]
+        // Query result?
+        if (item instanceof aQueryResult) {
+          item.prop(dotPath, value);
+          results = results.concat(item.$);
+          continue;
+        }
 
-      // Resolve dotpath
-      , obj = item
-      , segments = dotPath.split('.')
-      , seglen = segments.length - 1;
-      for(var j = 0;
-          j < seglen;
-          obj = obj[segments[j++]]) {
-        var jj = j + 1;
-        obj[segments[jj]] = obj[segments[jj]] || {};
+        // Resolve dotpath
+        var obj = item
+        , segments = dotPath.split('.')
+        , seglen = segments.length - 1;
+        for(var j = 0;
+            j < seglen;
+            obj = obj[segments[j++]]) {
+          var jj = j + 1;
+          obj[segments[jj]] = obj[segments[jj]] || {};
+        }
+
+        // Retrieving?
+        if (!value) {
+          // Retrieve
+          results.push(obj[segments[seglen]]);
+        } else {
+          // Assign value
+          results.push(obj[segments[seglen]] = value);
+        }
       }
 
-      // Retrieving?
-      if (!value) {
-        // Retrieve
-        results.push(obj[segments[seglen]]);
+      this.$ = results;
+      return this;
+    };
+
+    // Add at() prototype
+    //  This method is not meant for daisy chaining.
+    aproto.at = function(num) {
+      num = parseInt(num);
+      return this.collection[num];
+    };
+
+    // Create aQuery function
+    var aQuery = function(query) {
+      // Get the prototype?
+      if (arguments.length === 0) {
+        return aQueryResult.prototype;
+      }
+
+      // Re-base aQuery?
+      if (typeof query === 'function') {
+        return aQueryInit(query);
+      }
+
+      var collection;
+
+      // Sanity check
+      if (!hasEnumerator) {
+        collection = query;
+
+        // Sanity check
+        if (collection.length === undefined) {
+          collection = [];
+          console.warn('enumerator not specified; only array queries can be made '
+            + 'for ' + (base.home || '[anonymous base type]'));
+        }
       } else {
-        // Assign value
-        results.push(obj[segments[seglen]] = value);
+        // Call with aQuery as context
+        collection = enumerator.call(this, query);
+
+        // Sanity check
+        if (collection.length === undefined) {
+          collection = [];
+          console.warn('enumerator result not an array for '
+            + (base.name || '[anonymous base type]'));
+        }
       }
+
+      // Return new query result
+      return new aQueryResult(collection);
     }
 
-    this.$ = results;
-    return this;
-  };
+    return aQuery;
+  })(HTMLElement, querySelectorAllEnumerator);
 
-  // Add at() prototype
-  //  This method is not meant for daisy chaining.
-  aproto.at = function(num) {
-    num = parseInt(num);
-    return this.collection[num];
-  };
-
-  // Create aQuery function
-  var aQuery = function(query) {
-    // Get the prototype?
-    if (arguments.length === 0) {
-      return aQueryResult.prototype;
+  function querySelectorAllEnumerator(query) {
+    switch (true) {
+      case typeof query === 'string':
+        return document.querySelectorAll(query);
+      case typeof query.length === 'number':
+        return query;
+      case query instanceof HTMLElement:
+        return [query];
+      default:
+        var typeName = (typeof query.constructor !== 'undefined'
+            ? query.constructor.name
+            : query);
+        throw 'unknown query type for querySelectorAll enumerator: ' +
+            typeName;
     }
-
-    // Re-base aQuery?
-    if (typeof query === 'function') {
-      return aQueryInit(query);
-    }
-
-    var collection;
-
-    // Sanity check
-    if (!hasEnumerator) {
-      collection = query;
-
-      // Sanity check
-      if (collection.length === undefined) {
-        collection = [];
-        console.warn('enumerator not specified; only array queries can be made '
-          + 'for ' + (base.home || '[anonymous base type]'));
-      }
-    } else {
-      // Call with aQuery as context
-      collection = enumerator.call(this, query);
-
-      // Sanity check
-      if (collection.length === undefined) {
-        collection = [];
-        console.warn('enumerator result not an array for '
-          + (base.name || '[anonymous base type]'));
-      }
-    }
-
-    // Return new query result
-    return new aQueryResult(collection);
   }
 
-  return aQuery;
-})(HTMLElement, document.querySelectorAll.bind(document));
+  return A;
+})();
