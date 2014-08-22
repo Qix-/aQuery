@@ -129,6 +129,22 @@ A = aQuery = (function() {
       return this.collection[num];
     };
 
+    // Add each() prototype
+    //  Do NOT rely on Array.forEach()!
+    //  aQuery is built to support -any- array or object
+    //  with a .length property!
+    //
+    //  Use this function instead.
+    aproto.each = function(fn) {
+      var results = [];
+
+      for (var i = 0, len = this.collection.length; i < len; i++) {
+        results.push(fn(this.collection[i], i, this.collection));
+      }
+
+      this.$ = results;
+    };
+
     // Create aQuery function
     var aQuery = function(query) {
       // Get the prototype?
@@ -172,6 +188,7 @@ A = aQuery = (function() {
     return aQuery;
   })(HTMLElement, querySelectorAllEnumerator);
 
+  // Default enumerator
   function querySelectorAllEnumerator(query) {
     switch (true) {
       case typeof query === 'string':
