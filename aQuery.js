@@ -143,6 +143,7 @@ A = aQuery = (function() {
       }
 
       this.$ = results;
+      return this;
     };
 
     // Create aQuery function
