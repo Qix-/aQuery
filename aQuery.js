@@ -14,6 +14,7 @@ var A, aQuery, aQueryInit;
 
 A = aQuery = (function() { 
   var A = (aQueryInit = function (base, enumerator) {
+    'use strict';
 
     // Store slice
     var slice = [].slice
