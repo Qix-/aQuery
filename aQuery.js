@@ -14,7 +14,6 @@ var A, aQuery, aQueryInit;
 
 A = aQuery = (function() { 
   var A = (aQueryInit = function (base, enumerator) {
-    'use strict';
 
     // Store slice
     var slice = [].slice
@@ -39,17 +38,28 @@ A = aQuery = (function() {
 
     // Mirror base type prototype
     , aproto = aQueryResult.prototype
-    , obj = base
-    , proto = obj.prototype;
+    , proto = base.prototype;
 
     // Traverse prototype hierarchy
-    for (;
-        proto !== undefined;
-        proto = (obj = Object.getPrototypeOf(obj)).prototype) {
+    do {
       // Iterate prototype elements
       Object.getOwnPropertyNames(proto).forEach(function(key) {
+        // Check that it's enumerable and that it's not some
+        //  magic value we shouldn't be emulating
+        var descriptor = Object.getOwnPropertyDescriptor(proto, key);
+        if (!descriptor.enumerable || descriptor.get || descriptor.set) {
+          return;
+        }
+
         // Scope-ify the function itself
-        var fn = proto[key];
+        var fn;
+        try {
+          // We wrap this in a try block due to some browsers
+          //  throwing errors about interface issues.
+          fn = proto[key];
+        } catch(e) {
+          return;
+        }
 
         // Is it an actual prototype function?
         if (typeof fn !== 'function') {
@@ -78,7 +88,7 @@ A = aQuery = (function() {
           return this;
         };
       });
-    }
+    } while(proto = proto.__proto__);
 
     // Add prop() prototype
     aproto.prop = function(dotPath, value) {
